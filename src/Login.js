@@ -1,4 +1,5 @@
 import React from 'react';
+import {Redirect, withRouter} from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -8,9 +9,44 @@ import InputLabel from '@material-ui/core/InputLabel';
 import LockIcon from '@material-ui/icons/LockOutlined';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import App from './App'
 import './Login.css'
 
+const emailTest = "camilo";
+const passTest = "torres";
+
+export const fakeAuth = {
+  isAuthenticated: localStorage.getItem('isLoggedIn') || false,
+  authenticate(cb, email, pass) {
+    if(email === emailTest && pass === passTest){
+		this.isAuthenticated = true;
+		localStorage.setItem('isLoggedIn', true);
+		setTimeout(cb, 100); // fake async
+	}
+  },
+  signout(cb) {
+    this.isAuthenticated = false;
+	localStorage.setItem('isLoggedIn', false);
+    setTimeout(cb, 100);
+  }
+};
+
+export const AuthButton = withRouter(
+  ({ history }) =>
+    fakeAuth.isAuthenticated ? (
+      <p>
+        Welcome!{" "}
+        <button
+          onClick={() => {
+            fakeAuth.signout(() => history.push("/"));
+          }}
+        >
+          Sign out
+        </button>
+      </p>
+    ) : (
+      <p>You are not logged in.</p>
+    )
+);
 
 export class Login extends React.Component{
 
@@ -20,9 +56,26 @@ export class Login extends React.Component{
 		this.handleEmailChange = this.handleEmailChange.bind(this);
 		this.handlePassChange = this.handlePassChange.bind(this);
 	}
-
+	
+	state = {
+		redirectToReferrer: false
+	};
+	
+	login = () => {
+		fakeAuth.authenticate(() => {
+			this.setState({ redirectToReferrer: true });
+		}, this.state.email, this.state.pass);
+	};
+	
     render(){
-        return (
+		const { from } = this.props.location.state || { from: { pathname: "/" } };
+		const { redirectToReferrer } = this.state;
+
+		if (redirectToReferrer) {
+			return <Redirect to={from} />;
+		}
+
+		let signinform = (
             <React.Fragment>
                 <CssBaseline />
                 <main className="layout">
@@ -30,10 +83,10 @@ export class Login extends React.Component{
                         <Avatar className="avatar">
                             <LockIcon />
                         </Avatar>
-                        <Typography variant="headline">Sign in</Typography>
-                        <form onSubmit={App.handleLoginSubmit} className="form">
+                        <Typography variant="headline">Sign in</Typography>					
+                        <form onSubmit={this.login} className="form">
                             <FormControl margin="normal" required fullWidth>
-                                <InputLabel htmlFor="email">Email Address</InputLabel>
+                                <InputLabel htmlFor="email">Email Address (camilo)</InputLabel>
                                 <Input 
 									id="email" 
 									name="email" 
@@ -43,7 +96,7 @@ export class Login extends React.Component{
 			                    />
                             </FormControl>
                             <FormControl margin="normal" required fullWidth>
-                                <InputLabel htmlFor="password">Password</InputLabel>
+                                <InputLabel htmlFor="password">Password (torres)</InputLabel>
                                 <Input
                                     name="password"
                                     type="password"
@@ -67,20 +120,21 @@ export class Login extends React.Component{
                 </main>
             </React.Fragment>
         );
+        
+
+		return signinform;
     }
 
 	handleEmailChange(e) {
         this.setState({
             email: e.target.value
         });
-		localStorage.setItem('email', e.target.value);
     }
 
 	handlePassChange(e) {
         this.setState({
             pass: e.target.value
         });
-		localStorage.setItem('pass', e.target.value);
     }
 }
 
