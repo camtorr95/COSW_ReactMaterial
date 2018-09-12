@@ -1,25 +1,44 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import {withRouter} from 'react-router-dom';
 import {TodoList} from "./TodoList";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import moment from "moment";
 
-export class TodoApp extends Component {
+const Auth = {
+	signOut () {
+		localStorage.setItem('hasAuthenticated', false);
+	}
+};
+
+class TodoApp extends Component {
 	
 	constructor(props) {
 		super(props);
 		this.state = {items: [], text: '', priority: 0, dueDate: moment()};
-        this.handleTextChange = this.handleTextChange.bind(this);
-        this.handlePriorityChange = this.handlePriorityChange.bind(this);
-        this.handleDateChange = this.handleDateChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
 	}
 
+	static propTypes = {
+		match: PropTypes.object.isRequired,
+		location: PropTypes.object.isRequired,
+		history: PropTypes.object.isRequired
+	}
+	
+	handleSignOut = async e => {
+		await Auth.signOut();
+		this.props.history.push("/login");
+	}
+	
 	render () {
 		return (
 			<div>
 				<form onSubmit={this.handleSubmit} className="todo-form">
-                    <h3>New TODO</h3>
+					<div>
+						<h3>New TODO</h3>
+						<button onClick={this.handleSignOut}>Signout</button>
+					</div>
+					<br/>
                     <label htmlFor="text" className="right-margin">
                         Text:
                     </label>
@@ -63,25 +82,25 @@ export class TodoApp extends Component {
 		);
 	}
 
-	handleTextChange(e) {
+	handleTextChange = e => {
         this.setState({
             text: e.target.value
         });
     }
 
-    handlePriorityChange(e) {
+    handlePriorityChange = e => {
         this.setState({
             priority: e.target.value
         });
     }
 
-    handleDateChange(date) {
+    handleDateChange = date => {
         this.setState({
             dueDate: date
         });
     }
 
-    handleSubmit(e) {
+    handleSubmit = e => {
 
         e.preventDefault();
 
@@ -102,3 +121,5 @@ export class TodoApp extends Component {
         }));
     }
 }
+
+export default withRouter(TodoApp)
