@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import PropTypes from 'prop-types';
 import {withRouter} from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
@@ -13,12 +14,26 @@ import Typography from '@material-ui/core/Typography';
 import './Login.css'
 
 const Auth = {
-	signIn(user, password) {
+	signInTest(user, password) {
 		if(user !== "camilo" || password !== "torres") {
 			throw new Error("User is not registered. user=camilo, pass=torres");
 		} else {
 			localStorage.setItem('isLoggedIn', true);
 		}
+	},
+	signInAccessToken (user, password, history) {
+		axios.post('http://localhost:8080/user/login', {
+            username: user,
+            password: password
+        })
+			.then(function (response) {
+				localStorage.setItem('isLoggedIn', true);
+				localStorage.setItem('accessToken', response.data.accessToken);
+				history.push("/");
+			})
+			.catch(function (error) {
+                alert(error.message + ". User is not registered.");
+            });
 	}
 };
 
@@ -38,9 +53,8 @@ class Login extends React.Component {
 	handleSubmit = async e => {
 		e.preventDefault();
 		try {
-			await Auth.signIn(this.state.user, this.state.pass);
+			Auth.signInAccessToken(this.state.user, this.state.pass, this.props.history);
 			this.setState({userAuthenticated: true});
-			this.props.history.push("/");
 		} catch (e) {
 			this.setState({user: '', pass: ''});
 			alert(e.message);

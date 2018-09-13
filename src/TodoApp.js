@@ -1,22 +1,30 @@
 import React, {Component} from 'react';
+import axios from 'axios'
 import PropTypes from 'prop-types';
 import {withRouter} from 'react-router-dom';
 import {TodoList} from "./TodoList";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import moment from "moment";
 
 const Auth = {
-	signOut () {
-		localStorage.setItem('hasAuthenticated', false);
+	signOut() {
+		localStorage.setItem('isLoggedIn', false);
+		localStorage.setItem('accessToken', '');
 	}
 };
+
+const AxiosInstance = axios.create({
+            baseURL: 'http://localhost:8080/api',
+            timeout: 1000,
+            headers: {'Authorization': 'Bearer '+ localStorage.getItem('accessToken')}
+        });
 
 class TodoApp extends Component {
 	
 	constructor(props) {
 		super(props);
-		this.state = {items: [], text: '', priority: 0, dueDate: moment()};
+		this.state = {items: [], text: '', priority: 0, dueDate: null};
+		this.getTodoList();
 	}
 
 	static propTypes = {
@@ -100,6 +108,25 @@ class TodoApp extends Component {
         });
     }
 
+	getTodoList = () => {
+		var self = this;
+		AxiosInstance.get('/').then(function(response) {
+			self.setState({items: response.data});
+		})
+	}
+	
+	postTodo = (todo) => {
+		let self = this;
+		AxiosInstance.post('/', todo).then(function(response){
+			self.setState(prevState => ({
+				items: [...prevState.items, response.data],
+				text: '',
+				priority: '',
+				dueDate: ''
+			}));
+		});
+	}
+	
     handleSubmit = e => {
 
         e.preventDefault();
@@ -111,14 +138,10 @@ class TodoApp extends Component {
             text: this.state.text,
             priority: this.state.priority,
             dueDate: this.state.dueDate,
-
         };
-        this.setState(prevState => ({
-            items: prevState.items.concat(newItem),
-            text: '',
-            priority: '',
-            dueDate: ''
-        }));
+		
+		console.log(newItem);
+		this.postTodo(newItem);
     }
 }
 
