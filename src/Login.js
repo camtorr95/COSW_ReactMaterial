@@ -14,11 +14,12 @@ import Typography from '@material-ui/core/Typography';
 import './Login.css'
 
 const Auth = {
-	signInTest(user, password) {
+	signInTest(user, password, history) {
 		if(user !== "camilo" || password !== "torres") {
 			throw new Error("User is not registered. user=camilo, pass=torres");
 		} else {
 			localStorage.setItem('isLoggedIn', true);
+			history.push("/");
 		}
 	},
 	signInAccessToken (user, password, history) {
@@ -47,13 +48,13 @@ class Login extends React.Component {
 	
 	constructor(props){
 		super(props);
-		this.state = {userAuthenticated: localStorage.getItem('isLoggedIn') || false, user: '', pass: ''};
+		this.state = {userAuthenticated: localStorage.getItem('isLoggedIn') || false, user: 'camilo', pass: 'torres'};
 	}
 	
 	handleSubmit = async e => {
 		e.preventDefault();
 		try {
-			Auth.signInAccessToken(this.state.user, this.state.pass, this.props.history);
+			Auth.signInTest(this.state.user, this.state.pass, this.props.history);
 			this.setState({userAuthenticated: true});
 		} catch (e) {
 			this.setState({user: '', pass: ''});

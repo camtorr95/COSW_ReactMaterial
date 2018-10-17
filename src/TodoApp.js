@@ -5,6 +5,13 @@ import {withRouter} from 'react-router-dom';
 import {TodoList} from "./TodoList";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Button from '@material-ui/core/Button';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import FormControl from '@material-ui/core/FormControl';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 
 const Auth = {
 	signOut() {
@@ -14,16 +21,16 @@ const Auth = {
 };
 
 const AxiosInstance = axios.create({
-            baseURL: 'http://localhost:8080/api',
-            timeout: 1000,
-            headers: {'Authorization': 'Bearer '+ localStorage.getItem('accessToken')}
+			baseURL: 'http://localhost:8080/api/',
+            timeout: 7000,
+            headers: {"Access-Control-Allow-Origin": "*"}
         });
 
 class TodoApp extends Component {
 	
 	constructor(props) {
 		super(props);
-		this.state = {items: [], text: '', priority: 0, dueDate: null};
+		this.state = {items: [], description: '', priority: 0, dueDate: null, responsible: '', status: 'pending', file: null};
 		this.getTodoList();
 	}
 
@@ -38,61 +45,100 @@ class TodoApp extends Component {
 		this.props.history.push("/login");
 	}
 	
+	handleInputChange = async e => {
+		this.setState({
+			file: e.target.files[0]
+		});
+	}
+	
 	render () {
 		return (
 			<div>
-				<form onSubmit={this.handleSubmit} className="todo-form">
-					<div>
-						<h3>New TODO</h3>
-						<button onClick={this.handleSignOut}>Signout</button>
-					</div>
-					<br/>
-                    <label htmlFor="text" className="right-margin">
-                        Text:
-                    </label>
-
-                    <input
-                        id="text"
-                        onChange={this.handleTextChange}
-                        value={this.state.text}>
-                    </input>
-
-                    <br/>
-                    <br/>
-                    <label htmlFor="priority" className="right-margin">
-                        Priority:
-                    </label>
-
-                    <input
-                        id="priority"
-                        type="number"
-                        onChange={this.handlePriorityChange}
-                        value={this.state.priority}>
-                    </input>
-                    <br/>
-                    <br/>
-
-                    <DatePicker
-                        id="due-date"
-                        selected={this.state.dueDate}
-                        placeholderText="Due date"
-                        onChange={this.handleDateChange}>
-                    </DatePicker>
-                    <br/>
-                    <button>
-                        Add #{this.state.items.length + 1}
-                    </button>
-                </form>
-                <br/>
-                <br/>
-                <TodoList todoList={this.state.items}/>
+            <React.Fragment>
+                <CssBaseline />
+                <main className="layout">
+                    <Paper className="paper">
+                        <Typography variant="headline">Add TODO</Typography>					
+                        <form onSubmit={this.handleSubmit} className="form">
+                            <FormControl margin="normal" required fullWidth>
+                                <InputLabel htmlFor="description">Description</InputLabel>
+                                <Input 
+									id="description" 
+									name="description" 
+									autoComplete="description" 
+									autoFocus 
+									onChange={this.handleDescriptionChange}
+									value={this.state.description}
+			                    />
+                            </FormControl>
+                            <FormControl margin="normal" required fullWidth>
+                                <InputLabel htmlFor="priority">Priority</InputLabel>
+                                <Input
+                                    name="priority"
+                                    type="number"
+                                    id="priority"
+                                    autoComplete="priority"
+									onChange={this.handlePriorityChange}
+			                        value={this.state.priority}
+                                />
+                            </FormControl>
+							<FormControl margin="normal" required fullWidth>
+                                <DatePicker
+									id="due-date"
+									selected={this.state.dueDate}
+									placeholderText="Due date"
+									onChange={this.handleDateChange}>
+								</DatePicker>
+                            </FormControl>
+							<FormControl margin="normal" required fullWidth>
+                                <InputLabel htmlFor="responsible">Responsible</InputLabel>
+                                <Input
+                                    name="responsible"
+                                    id="responsible"
+                                    autoComplete="responsible"
+									onChange={this.handleResponsibleChange}
+			                        value={this.state.responsible}
+                                />
+                            </FormControl>
+							<FormControl margin="normal" required fullWidth>
+                                <InputLabel htmlFor="status">Status</InputLabel>
+                                <Input
+                                    name="status"
+                                    id="status"
+                                    autoComplete="status"
+									onChange={this.handleStatusChange}
+			                        value={this.state.status}
+                                />
+                            </FormControl>
+							<FormControl margin="normal" required fullWidth>
+								<InputLabel htmlFor="file_in">File (1 mb limit)</InputLabel>
+                                <input type="file" id="file_in" name="file_in" onChange={this.handleInputChange}/>
+                            </FormControl>
+							<FormControl margin="normal">
+								<Button
+									type="submit"
+									fullWidth
+									variant="raised"
+									color="primary"
+									className="submit"
+								>
+									Add #{this.state.items.length + 1}
+								</Button>
+							</FormControl>
+                        </form>
+						<br/>
+                    </Paper>
+                </main>
+			</React.Fragment>
+			<br/>
+			<TodoList todoList={this.state.items}/>
 			</div>
-		);
+        );
 	}
 
-	handleTextChange = e => {
+	handleDescriptionChange = e => {
         this.setState({
-            text: e.target.value
+            description: e.target.value
         });
     }
 
@@ -107,22 +153,37 @@ class TodoApp extends Component {
             dueDate: date
         });
     }
+	
+	handleResponsibleChange =  async e => {
+		this.setState({
+			responsible: e.target.value
+		});
+	}
+	
+	handleStatusChange = async e => {
+		this.setState({
+			status: e.target.value
+		});
+	}
 
 	getTodoList = () => {
 		var self = this;
-		AxiosInstance.get('/').then(function(response) {
+		AxiosInstance.get('todo').then(function(response) {
 			self.setState({items: response.data});
 		})
 	}
 	
 	postTodo = (todo) => {
 		let self = this;
-		AxiosInstance.post('/', todo).then(function(response){
+		AxiosInstance.post('todo', todo).then(function(response){
 			self.setState(prevState => ({
 				items: [...prevState.items, response.data],
-				text: '',
+				description: '',
 				priority: '',
-				dueDate: ''
+				dueDate: null,
+				responsible: '',
+				status: 'pending',
+				file: null
 			}));
 		});
 	}
@@ -131,17 +192,30 @@ class TodoApp extends Component {
 
         e.preventDefault();
 
-        if (!this.state.text.length || !this.state.priority.length || !this.state.dueDate)
-            return;
+		let data = new FormData();
+        data.append('file', this.state.file);
+		let self = this;
+        AxiosInstance.post('files', data)
+            .then(function (response) {
+                console.log("file uploaded!", data);
+				if (!self.state.description.length || !self.state.priority.length || !self.state.dueDate || !self.state.responsible || !self.state.status)
+					return;
 
-        const newItem = {
-            text: this.state.text,
-            priority: this.state.priority,
-            dueDate: this.state.dueDate,
-        };
+				const newItem = {
+					description: self.state.description,
+					priority: self.state.priority,
+					dueDate: self.state.dueDate,
+					responsible: self.state.responsible,
+					status: self.state.status,
+					fileUrl: self.state.file.name
+				};
 		
-		console.log(newItem);
-		this.postTodo(newItem);
+				console.log(newItem);
+				self.postTodo(newItem);
+        })
+        .catch(function (error) {
+            console.log("failed file upload", error);
+        })
     }
 }
 
